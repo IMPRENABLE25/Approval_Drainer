@@ -1,0 +1,20 @@
+# Frontend dependencies and generated output
+node_modules/
+.next/
+
+# Foundry build, cache, coverage and broadcast artifacts
+/out/
+/cache/
+/coverage/
+/broadcast/
+
+# Local deployment address files
+/deployments/*.json
+
+# Environment secrets (keep the placeholder template versioned)
+.env*
+!.env.example
+
+# Maintainer-only material; do not publish with the public lab
+/solutions/
+/docs/METHODOLOGIE_ATTAQUE.md
