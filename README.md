@@ -61,7 +61,7 @@ Les tests utilisent un ERC-20 fictif local et vérifient les limites de l'allowa
 
 ## Configuration frontend
 
-Utilisez les adresses `wrappedTbnb` et `approvalDrainer` affichées par le déploiement pour renseigner :
+Dans Vercel, définissez `frontend` comme **Root Directory** et choisissez Next.js comme framework. L'application et son `package.json` sont autonomes dans ce dossier. Utilisez les adresses `wrappedTbnb` et `approvalDrainer` affichées par le déploiement pour renseigner les variables d'environnement Vercel (ou copiez `frontend/.env.example` en `frontend/.env.local` pour le développement local) :
 
 ```env
 NEXT_PUBLIC_BSC_WTBNB_ADDRESS=
