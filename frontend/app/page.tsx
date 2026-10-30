@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  useAccount, useConnect, useDisconnect, useReadContract, useWaitForTransactionReceipt,
+  useConnection, useConnect, useDisconnect, useReadContract, useWaitForTransactionReceipt,
   useWriteContract
 } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -31,10 +31,12 @@ const bscToken = process.env.NEXT_PUBLIC_BSC_WTBNB_ADDRESS ?? "";
 const bscDrainer = process.env.NEXT_PUBLIC_BSC_DRAINER_ADDRESS ?? "";
 
 export default function Home() {
-  const { address, chainId, isConnected } = useAccount();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { writeContract, data: txHash, isPending, error: writeError } = useWriteContract();
+  const { address, chainId, status } = useConnection();
+  const isConnected = status === "connected";
+  const connect = useConnect();
+  const disconnect = useDisconnect();
+  const writeContract = useWriteContract();
+  const { data: txHash, isPending, error: writeError } = writeContract;
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
   const [tokenInput, setTokenInput] = useState(bscToken);
   const [spenderInput, setSpenderInput] = useState(bscDrainer);
@@ -79,12 +81,12 @@ export default function Home() {
   const validAmount = Boolean(canInteract && amount && amount > ZERO);
   const valid = Boolean(validAmount && recipient);
   const isOwnerSigner = Boolean(address && owner && address.toLowerCase() === owner.toLowerCase());
-  const submitApproval = (value: bigint) => token && spender && isOwnerSigner && writeContract({ address: token, abi: erc20Abi, functionName: "approve", args: [spender, value] });
+  const submitApproval = (value: bigint) => token && spender && isOwnerSigner && writeContract.mutate({ address: token, abi: erc20Abi, functionName: "approve", args: [spender, value] });
   const approveFinite = () => amount !== undefined && submitApproval(amount);
   const revoke = () => submitApproval(ZERO);
-  const wrap = () => isBscWrapper && wrapAmount && wrapAmount > ZERO && writeContract({ address: token!, abi: wrapperAbi, functionName: "deposit", value: wrapAmount });
-  const unwrap = () => isBscWrapper && wrapAmount && wrapAmount > ZERO && writeContract({ address: token!, abi: wrapperAbi, functionName: "withdraw", args: [wrapAmount] });
-  const exercise = () => valid && amount !== undefined && writeContract({
+  const wrap = () => isBscWrapper && wrapAmount && wrapAmount > ZERO && writeContract.mutate({ address: token!, abi: wrapperAbi, functionName: "deposit", value: wrapAmount });
+  const unwrap = () => isBscWrapper && wrapAmount && wrapAmount > ZERO && writeContract.mutate({ address: token!, abi: wrapperAbi, functionName: "withdraw", args: [wrapAmount] });
+  const exercise = () => valid && amount !== undefined && writeContract.mutate({
     address: spender!, abi: drainerAbi, functionName: "exerciseAllowance",
     args: [token!, owner!, recipient!, amount]
   });
@@ -93,8 +95,8 @@ export default function Home() {
     <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
       <div><p className="text-xs uppercase tracking-[.25em] text-cyan-300">Smart Contract Security Lab / Module 01</p><h1 className="mt-2 text-4xl font-bold">Approval Drainer</h1></div>
       {isConnected
-        ? <button className="rounded-lg border border-slate-600 px-4 py-2" onClick={() => disconnect()}>Déconnecter {address?.slice(0, 6)}…</button>
-        : <button className="rounded-lg bg-cyan-300 px-4 py-2 font-semibold text-slate-950" onClick={() => connect({ connector: injected() })}>Connecter un wallet de test</button>}
+        ? <button className="rounded-lg border border-slate-600 px-4 py-2" onClick={() => disconnect.mutate()}>Déconnecter {address?.slice(0, 6)}…</button>
+        : <button className="rounded-lg bg-cyan-300 px-4 py-2 font-semibold text-slate-950" onClick={() => connect.mutate({ connector: injected() })}>Connecter un wallet de test</button>}
     </header>
 
     <div className="mb-6 rounded-xl border border-amber-500/50 bg-amber-950/40 p-4 text-amber-100">

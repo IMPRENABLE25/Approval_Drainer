@@ -2,6 +2,9 @@
   "name": "approval-drainer-frontend",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,23 +13,19 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.20",
-    "@wagmi/connectors": "5.1.5",
-    "next": "^14.2.15",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "viem": "^2.21.54",
-    "wagmi": "2.12.25"
-  },
-  "overrides": {
-    "@wagmi/connectors": "5.1.5"
+    "next": "16.4.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "viem": "^2.56.9",
+    "wagmi": "3.7.9"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.23",
     "tailwindcss": "^3.4.15",
-    "typescript": "^5.6.3"
+    "typescript": "^5.9.3"
   }
 }
