@@ -1,8 +1,8 @@
 # Smart Contract Security Lab — Approval Drainer
 
-## Objectif du laboratoire
+## Objectif du lab
 
-**Classe de vulnérabilité étudiée :** dans un protocole, une allowance ERC-20 accordée à un contrat peut devenir exploitable si ce contrat ne contrôle pas correctement qui peut déclencher `transferFrom`, pour quel propriétaire, quel montant et vers quel destinataire. Une fonction publique mal protégée ou insuffisamment contrainte peut permettre à un tiers d'utiliser l'autorisation existante d'un utilisateur pour déplacer ses tokens. L'approbation ERC-20 n'est pas, à elle seule, une vulnérabilité : le risque vient de la manière dont le contrat spender utilise cette permission. La déconnexion du wallet ne révoque pas une allowance déjà accordée.
+Dans un protocole, une allowance ERC-20 accordée à un contrat peut devenir exploitable si ce contrat ne contrôle pas correctement qui peut déclencher `transferFrom`, pour quel propriétaire, quel montant et vers quel destinataire. Une fonction publique mal protégée ou insuffisamment contrainte peut permettre à un tiers d'utiliser l'autorisation existante d'un utilisateur pour déplacer ses tokens. L'approbation ERC-20 n'est pas, à elle seule, une vulnérabilité : le risque vient de la manière dont le contrat spender utilise cette permission. La déconnexion du wallet ne révoque pas une allowance déjà accordée.
 
 **Ce que démontre ce lab :** sur BNB Smart Chain Testnet et avec des actifs fictifs, `ApprovalDrainer` reproduit volontairement ce défaut de contrôle. Le propriétaire enveloppe du tBNB en WTBNB et approuve le spender ; un wallet tiers peut ensuite appeler sa fonction publique et choisir le montant ainsi que le destinataire, sans nouvelle signature du propriétaire. Le laboratoire permet d'observer les préconditions et les limites de l'exploitation, puis d'étudier une conception corrigée.
 
