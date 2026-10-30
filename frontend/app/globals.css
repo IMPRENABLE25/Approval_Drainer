@@ -106,6 +106,14 @@ h1 { margin-bottom: 5px; color: #26352f; font-size: clamp(25px, 3vw, 31px); font
 .summary-foot { display: block; overflow: hidden; margin-top: 7px; color: #849089; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 
 .content-grid { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: start; gap: 15px; margin-bottom: 15px; }
+.dashboard-links { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+.route-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px 13px; min-height: 116px; padding: 17px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: #35443c; text-decoration: none; box-shadow: var(--shadow); }
+.route-card .step-number { grid-row: span 2; }
+.route-card strong { align-self: end; font-size: 16px; }
+.route-card > span:not(.step-number) { grid-column: 2; color: #6e7b74; font-size: 13px; }
+.route-card b { grid-column: 2; color: #267052; font-size: 13px; }
+.route-panel { margin-bottom: 16px; }
+.funds-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 8px 0 20px; }
 .panel { min-width: 0; padding: 21px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .panel-heading .eyebrow { margin-bottom: 5px; color: #74867c; }
@@ -235,6 +243,67 @@ label { color: #4e5d55; font-size: 11px; font-weight: 650; }
   .text-action { align-self: flex-start; }
   .permission-table > div { grid-template-columns: .65fr 1.35fr; }
   .review-list > div { grid-template-columns: 82px minmax(0, 1fr); }
+}
+
+/* Larger type and gentle route-level motion for easier scanning. */
+body { font-size: 16px; }
+.side-label, .eyebrow { font-size: 11px; }
+.nav-link { min-height: 46px; font-size: 14px; }
+.brand strong { font-size: 17px; }
+.brand small { font-size: 12px; }
+.sidebar-note strong { font-size: 13px; }
+.sidebar-note small { font-size: 12px; }
+.breadcrumb { font-size: 14px; }
+.network-pill, .environment-tag { min-height: 34px; font-size: 12px; }
+h1 { font-size: clamp(29px, 3.4vw, 36px); }
+h2 { font-size: 21px; }
+.heading-copy, .panel-copy { font-size: 15px; }
+.notice p { font-size: 14px; }
+.summary-label { font-size: 11px; }
+.summary-value { font-size: clamp(20px, 1.8vw, 25px); }
+.summary-value span { font-size: 14px; }
+.address-value { font-size: 14px; }
+.summary-foot { font-size: 12px; }
+label { font-size: 14px; }
+.amount-control { min-height: 48px; }
+.amount-control input, .text-input { font-size: 15px; }
+.amount-control span { font-size: 13px; }
+.text-input { height: 46px; }
+.address-readonly { min-height: 44px; font-size: 12px; }
+.field-help, .inline-help { font-size: 13px; }
+.inline-warning { font-size: 13px; }
+.button { min-height: 45px; padding: 0 17px; font-size: 14px; }
+.button-small { min-height: 39px; font-size: 12px; }
+.offer-card strong { font-size: 16px; }
+.offer-card > span:not(.offer-kicker) { font-size: 13px; }
+.offer-card small { font-size: 12px; }
+.callout strong { font-size: 14px; }
+.callout p { font-size: 13px; }
+.permission-table span[role="cell"] { font-size: 13px; }
+.permission-table strong[role="cell"] { font-size: 12px; }
+.transaction-panel > p { font-size: 14px; }
+.page-footer { font-size: 12px; }
+.route-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.route-card:hover { transform: translateY(-3px); border-color: #a8cbbb; box-shadow: 0 9px 22px rgb(37 56 49 / 9%); }
+.route-panel { animation: route-enter .24s ease-out both; }
+@keyframes route-enter { from { transform: translateY(8px); } to { transform: translateY(0); } }
+
+@media (max-width: 720px) {
+  .nav-link { min-height: 40px; font-size: 12px; }
+  .topbar-actions { flex-wrap: wrap; }
+  .summary-value { font-size: 19px; }
+  .summary-label { font-size: 9px; }
+  .summary-foot { font-size: 11px; }
+  .route-panel { padding: 17px; }
+}
+@media (max-width: 420px) {
+  .network-pill { font-size: 11px; }
+  .button-small { font-size: 11px; }
+  .summary-value { font-size: 16px; }
+  .summary-label { font-size: 8px; }
+  .summary-foot { font-size: 10px; }
+  .button { width: 100%; }
+  .action-row { align-items: stretch; flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }

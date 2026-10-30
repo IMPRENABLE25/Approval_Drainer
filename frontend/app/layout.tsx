@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { Providers } from "../components/Providers";
 
 export const metadata: Metadata = {
-  title: "Pay OFF | StakeFlow Security Lab",
-  description: "Démonstration pédagogique des autorisations ERC-20 sur BNB Testnet avec des tokens de test."
+  title: "StakeFlow",
+  description: "Gestion des fonds de test et consultation des autorisations sur BNB Testnet."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
