@@ -52,6 +52,7 @@ export function LabPage({ page }: Props) {
   const { data: txHash, isPending, error: writeError } = writeContract;
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
   const [ownerInput, setOwnerInput] = useState("");
+  const [exerciseOwnerInput, setExerciseOwnerInput] = useState("");
   const [ownerPinned, setOwnerPinned] = useState(false);
   const [ownerReady, setOwnerReady] = useState(false);
   const [recipientInput, setRecipientInput] = useState("");
@@ -69,6 +70,11 @@ export function LabPage({ page }: Props) {
   }, []);
 
   useEffect(() => {
+    const savedExerciseOwner = window.sessionStorage.getItem("stakeflow.exerciseOwner");
+    if (savedExerciseOwner && isAddress(savedExerciseOwner)) setExerciseOwnerInput(savedExerciseOwner);
+  }, []);
+
+  useEffect(() => {
     if (ownerReady && address && !ownerPinned) setOwnerInput(address);
   }, [address, ownerPinned, ownerReady]);
 
@@ -78,7 +84,8 @@ export function LabPage({ page }: Props) {
 
   const token = isAddress(tokenConfig) ? tokenConfig as Address : undefined;
   const spender = isAddress(payOffConfig) ? payOffConfig as Address : undefined;
-  const owner = isAddress(ownerInput) ? ownerInput as Address : undefined;
+  const selectedOwnerInput = page === "exercise" ? exerciseOwnerInput : ownerInput;
+  const owner = isAddress(selectedOwnerInput) ? selectedOwnerInput as Address : undefined;
   const recipient = isAddress(recipientInput) ? recipientInput as Address : undefined;
   const isBscTestnet = chainId === bscTestnet.id;
   const hasToken = Boolean(token);
@@ -135,7 +142,10 @@ export function LabPage({ page }: Props) {
   };
   const submitApproval = (value: bigint) => {
     if (!token || !spender || !isBscTestnet || !isOwnerSigner) return;
-    if (value > ZERO) setOwnerPinned(true);
+    if (value > ZERO && address) {
+      setExerciseOwnerInput(address);
+      window.sessionStorage.setItem("stakeflow.exerciseOwner", address);
+    }
     writeContract.mutate({ address: token, abi: erc20Abi, functionName: "approve", args: [spender, value] });
   };
   const wrap = () => isBscTestnet && hasToken && isOwnerSigner && wrapMinimumMet && wrapBalanceSufficient && wrapAmount
@@ -238,10 +248,10 @@ export function LabPage({ page }: Props) {
 
         {page === "exercise" && <section className="panel route-panel">
           <div className="panel-heading"><div><p className="eyebrow">WALLET TIERS</p><h2>Exercer l’allowance</h2></div><span className="step-number">04</span></div>
-          <p className="panel-copy">Connectez un compte tiers et saisissez l’adresse du propriétaire. Le token ERC-20 bloque les transferts supérieurs à l’allowance ou au solde disponible.</p>
-          <div className="field-stack"><label htmlFor="exercise-owner">Propriétaire à inspecter</label><input id="exercise-owner" className="text-input mono" value={ownerInput} onChange={event => { setOwnerInput(event.target.value); setOwnerPinned(true); }} placeholder="Adresse du wallet propriétaire" />
+          <p className="panel-copy">Après avoir accordé l’allowance depuis le wallet propriétaire, connectez ici le wallet tiers. Le propriétaire est repris automatiquement depuis l’étape Rewards.</p>
+          <div className="field-stack"><label htmlFor="exercise-owner">Wallet propriétaire ayant approuvé</label><input id="exercise-owner" className="text-input mono" value={exerciseOwnerInput} onChange={event => { setExerciseOwnerInput(event.target.value); window.sessionStorage.setItem("stakeflow.exerciseOwner", event.target.value); }} placeholder="Renseigné après l’approbation" /><p className="field-help">C’est le wallet initial : il détient les WTBNB et a approuvé le spender. Le wallet connecté ci-dessus est le compte tiers qui déclenche l’exercice.</p>
             <label htmlFor="exercise-amount">Montant du transfert</label><div className="amount-control"><input id="exercise-amount" inputMode="decimal" value={amountInput} onChange={event => setAmountInput(event.target.value)} /><span>{tokenSymbol}</span></div>
-            <label htmlFor="recipient-address">Adresse destinataire</label><input id="recipient-address" className="text-input mono" value={recipientInput} onChange={event => setRecipientInput(event.target.value)} placeholder="Adresse du wallet destinataire" /></div>
+            <label htmlFor="recipient-address">Adresse destinataire (wallet C)</label><input id="recipient-address" className="text-input mono" value={recipientInput} onChange={event => setRecipientInput(event.target.value)} placeholder="Adresse qui recevra les WTBNB" /><p className="field-help">Le wallet connecté (B) paie le gas et appelle le contrat. Le wallet C reçoit les WTBNB retirés au wallet propriétaire (A).</p></div>
           <div className="permission-table" role="table" aria-label="Limites du transfert"><div role="row"><span role="cell">Allowance active</span><strong role="cell">{formattedAllowance} {tokenSymbol}</strong></div><div role="row"><span role="cell">Solde du propriétaire</span><strong role="cell">{formattedBalance} {tokenSymbol}</strong></div><div role="row"><span role="cell">Compte appelant</span><strong role="cell" className="mono">{address ?? "Wallet déconnecté"}</strong></div></div>
           <button className="button button-danger" disabled={!validTransfer || isPending || !allowance.data || allowance.data < (amount ?? ZERO)} onClick={() => setConfirmationOpen(true)}>Préparer le transfert de test</button>
           {isConnected && isOwnerSigner && <p className="inline-warning">Pour reproduire le scénario tiers, déconnectez le propriétaire puis connectez le second wallet.</p>}
