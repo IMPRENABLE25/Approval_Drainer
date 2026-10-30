@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  useConnection, useConnect, useDisconnect, useReadContract,
+  useBalance, useConnection, useConnect, useDisconnect, useReadContract,
   useWaitForTransactionReceipt, useWriteContract
 } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -26,6 +26,8 @@ const payOffAbi = [{
   inputs: [{ name: "token", type: "address" }, { name: "owner", type: "address" }, { name: "recipient", type: "address" }, { name: "amount", type: "uint256" }], outputs: []
 }] as const;
 const ZERO = 0n;
+const MIN_WRAP_AMOUNT = parseUnits("0.01", 18);
+const GAS_RESERVE = parseUnits("0.0005", 18);
 const MAX_UINT = (1n << 256n) - 1n;
 const tokenConfig = process.env.NEXT_PUBLIC_BSC_WTBNB_ADDRESS ?? "";
 const payOffConfig = process.env.NEXT_PUBLIC_BSC_DRAINER_ADDRESS ?? "";
@@ -80,6 +82,7 @@ export function LabPage({ page }: Props) {
   const owner = isAddress(ownerInput) ? ownerInput as Address : undefined;
   const recipient = isAddress(recipientInput) ? recipientInput as Address : undefined;
   const isBscTestnet = chainId === bscTestnet.id;
+  const hasToken = Boolean(token);
   const hasContracts = Boolean(token && spender);
   const isOwnerSigner = Boolean(address && owner && address.toLowerCase() === owner.toLowerCase());
   const canInteract = Boolean(isConnected && isBscTestnet && hasContracts && owner);
@@ -89,13 +92,15 @@ export function LabPage({ page }: Props) {
   const decimals = useReadContract({ address: token, abi: erc20Abi, functionName: "decimals", query: { enabled: Boolean(token && isBscTestnet) } });
   const balance = useReadContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: owner ? [owner] : undefined, query: { enabled: Boolean(token && owner && isBscTestnet) } });
   const allowance = useReadContract({ address: token, abi: erc20Abi, functionName: "allowance", args: owner && spender ? [owner, spender] : undefined, query: { enabled: Boolean(token && spender && owner && isBscTestnet) } });
+  const nativeBalance = useBalance({ address, chainId: bscTestnet.id, query: { enabled: Boolean(address && isBscTestnet) } });
 
   useEffect(() => {
     if (receipt.isSuccess) {
       void allowance.refetch();
       void balance.refetch();
+      void nativeBalance.refetch();
     }
-  }, [receipt.isSuccess, txHash, allowance.refetch, balance.refetch]);
+  }, [receipt.isSuccess, txHash, allowance.refetch, balance.refetch, nativeBalance.refetch]);
 
   let amount: bigint | undefined;
   let wrapAmount: bigint | undefined;
@@ -105,6 +110,9 @@ export function LabPage({ page }: Props) {
   } catch { amount = undefined; wrapAmount = undefined; }
 
   const amountWithinBalance = amount !== undefined && balance.data !== undefined && amount <= balance.data;
+  const wrapMinimumMet = wrapAmount !== undefined && wrapAmount >= MIN_WRAP_AMOUNT;
+  const wrapBalanceSufficient = wrapAmount !== undefined && nativeBalance.data !== undefined
+    && nativeBalance.data.value >= wrapAmount + GAS_RESERVE;
   const validAmount = Boolean(canInteract && amount && amount > ZERO && amountWithinBalance);
   const validTransfer = Boolean(validAmount && recipient);
   const formattedBalance = balance.data !== undefined && decimals.data !== undefined ? formatUnits(balance.data, decimals.data) : "—";
@@ -127,9 +135,9 @@ export function LabPage({ page }: Props) {
     if (value > ZERO) setOwnerPinned(true);
     writeContract.mutate({ address: token, abi: erc20Abi, functionName: "approve", args: [spender, value] });
   };
-  const wrap = () => isBscTestnet && hasContracts && isOwnerSigner && wrapAmount && wrapAmount > ZERO
+  const wrap = () => isBscTestnet && hasToken && isOwnerSigner && wrapMinimumMet && wrapBalanceSufficient && wrapAmount
     && writeContract.mutate({ address: token!, abi: wrapperAbi, functionName: "deposit", value: wrapAmount });
-  const unwrap = () => isBscTestnet && hasContracts && isOwnerSigner && wrapAmount && wrapAmount > ZERO
+  const unwrap = () => isBscTestnet && hasToken && isOwnerSigner && wrapAmount && wrapAmount > ZERO
     && writeContract.mutate({ address: token!, abi: wrapperAbi, functionName: "withdraw", args: [wrapAmount] });
   const exercise = () => validTransfer && amount !== undefined && writeContract.mutate({
     address: spender!, abi: payOffAbi, functionName: "exerciseAllowance",
@@ -190,12 +198,15 @@ export function LabPage({ page }: Props) {
         {page === "funds" && <section className="panel route-panel">
           <div className="panel-heading"><div><p className="eyebrow">ACTIFS DE TEST</p><h2>Wrapper tBNB → WTBNB</h2></div><span className="step-number">01</span></div>
           <p className="panel-copy">Déposez du tBNB dans le contrat WTBNB. Le wrapper émet le même montant de tokens ERC-20 sur votre wallet. Gardez du tBNB pour les frais.</p>
-          <div className="summary-grid funds-summary"><Summary label="SOLDE WTBNB" value={`${formattedBalance} ${tokenSymbol}`} foot={owner ?? "Wallet non sélectionné"} /><Summary label="CONTRAT WTBNB" value={token ? `${token.slice(0, 10)}…${token.slice(-6)}` : "À configurer"} foot={name.data ?? "Adresse issue de la configuration"} /></div>
+          <div className="summary-grid funds-summary"><Summary label="SOLDE WTBNB" value={`${formattedBalance} ${tokenSymbol}`} foot={owner ?? "Wallet non sélectionné"} /><Summary label="SOLDE NATIF" value={nativeBalance.data ? `${formatUnits(nativeBalance.data.value, 18)} tBNB` : "— tBNB"} foot="Une réserve de 0,0005 tBNB est gardée pour les frais" /></div>
           <label htmlFor="wrap-amount">Montant à envelopper</label>
-          <div className="amount-control"><input id="wrap-amount" inputMode="decimal" value={amountInput} onChange={event => setAmountInput(event.target.value)} /><span>tBNB</span></div>
-          <div className="action-row"><button className="button button-primary" disabled={!isBscTestnet || !hasContracts || !isOwnerSigner || isPending || !wrapAmount || wrapAmount <= ZERO} onClick={wrap}>Envelopper en WTBNB</button><button className="button button-outline" disabled={!isBscTestnet || !hasContracts || !isOwnerSigner || isPending || !wrapAmount || wrapAmount <= ZERO} onClick={unwrap}>Récupérer le tBNB</button></div>
+          <div className="amount-control"><input id="wrap-amount" inputMode="decimal" type="number" min="0.01" step="0.01" value={amountInput} onChange={event => setAmountInput(event.target.value)} /><span>tBNB</span></div>
+          <p className="field-help">Minimum : 0,01 tBNB. Disponible : {nativeBalance.data ? `${formatUnits(nativeBalance.data.value, 18)} tBNB` : "lecture en cours"}.</p>
+          <div className="action-row"><button className="button button-primary" disabled={!isBscTestnet || !hasToken || !isOwnerSigner || isPending || !wrapMinimumMet || !wrapBalanceSufficient} onClick={wrap}>Envelopper en WTBNB</button><button className="button button-outline" disabled={!isBscTestnet || !hasToken || !isOwnerSigner || isPending || !wrapAmount || wrapAmount <= ZERO || !balance.data || wrapAmount > balance.data} onClick={unwrap}>Récupérer le tBNB</button></div>
           {!isBscTestnet && <p className="inline-warning">Sélectionnez BNB Testnet (chain ID 97) dans MetaMask.</p>}
           {isBscTestnet && !token && <p className="inline-warning">Configurez NEXT_PUBLIC_BSC_WTBNB_ADDRESS.</p>}
+          {isConnected && isBscTestnet && !isOwnerSigner && <div className="action-row"><button className="button button-outline" onClick={pinConnectedOwner}>Utiliser le wallet connecté comme propriétaire</button></div>}
+          {isBscTestnet && wrapMinimumMet && nativeBalance.data && !wrapBalanceSufficient && <p className="inline-warning">Solde insuffisant pour ce wrap et les frais : réduisez le montant ou ajoutez du tBNB de test.</p>}
         </section>}
 
         {page === "rewards" && <section className="panel route-panel">
@@ -206,7 +217,6 @@ export function LabPage({ page }: Props) {
             <button type="button" className={`offer-card ${selectedOffer === "plus" ? "offer-selected" : ""}`} aria-pressed={selectedOffer === "plus"} onClick={() => { setSelectedOffer("plus"); setAmountInput("0.05"); }}><span className="offer-kicker">OFFRE 02</span><strong>Exploration</strong><span>Montant de démonstration · 0,05 WTBNB</span><small>Aucune récompense réelle</small></button>
           </div>
           <div className="form-row offer-amount"><label htmlFor="offer-amount">Montant de l’autorisation</label><div className="amount-control"><input id="offer-amount" inputMode="decimal" value={amountInput} onChange={event => { setAmountInput(event.target.value); setSelectedOffer("custom"); }} /><span>{tokenSymbol}</span></div><p className="field-help">Solde WTBNB disponible : {formattedBalance} {tokenSymbol}</p></div>
-          <div className="callout callout-info"><strong>Autorisation requise</strong><p>Cette transaction appelle <code>approve</code> et accorde au contrat spender une allowance allant jusqu’au montant affiché. Aucun token n’est transféré dans un pool. Vérifiez l’adresse du spender et le montant dans MetaMask.</p></div>
           <div className="action-row"><button className="button button-primary" disabled={!validAmount || !isOwnerSigner || isPending} onClick={() => amount !== undefined && submitApproval(amount)}>Autoriser le dépôt</button></div>
           {isConnected && !isOwnerSigner && <p className="inline-warning">Pour approuver, connectez le wallet qui détient les WTBNB.</p>}
         </section>}
