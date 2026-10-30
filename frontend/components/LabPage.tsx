@@ -5,9 +5,8 @@ import {
   useBalance, useConnection, useConnect, useDisconnect, useReadContract,
   useWaitForTransactionReceipt, useWriteContract
 } from "wagmi";
-import { injected } from "wagmi/connectors";
 import { formatUnits, isAddress, parseUnits, type Address } from "viem";
-import { bscTestnet } from "./Providers";
+import { bscTestnet, metaMaskConnector } from "./Providers";
 
 const erc20Abi = [
   { type: "function", name: "name", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
@@ -127,8 +126,12 @@ export function LabPage({ page }: Props) {
     setOwnerPinned(true);
   };
   const disconnectWallet = () => {
-    if (owner) setOwnerPinned(true);
     disconnect.mutate();
+    // The next connected account becomes the displayed owner by default.
+    // Keeping the previous account pinned made a new wallet look like the old one.
+    setOwnerPinned(false);
+    setOwnerInput("");
+    window.sessionStorage.removeItem("stakeflow.owner");
   };
   const submitApproval = (value: bigint) => {
     if (!token || !spender || !isBscTestnet || !isOwnerSigner) return;
@@ -172,7 +175,7 @@ export function LabPage({ page }: Props) {
           <div className={`network-pill ${isBscTestnet ? "network-ok" : ""}`}><span className="status-dot" />{!isConnected ? "Wallet déconnecté" : isBscTestnet ? "BNB Testnet · 97" : "Sélectionnez BNB Testnet"}</div>
           {isConnected
             ? <button className="button button-outline button-small" onClick={disconnectWallet}>Déconnecter · {address?.slice(0, 6)}…{address?.slice(-4)}</button>
-            : <button className="button button-primary button-small" onClick={() => connect.mutate({ connector: injected() })}>Connecter MetaMask</button>}
+            : <button className="button button-primary button-small" onClick={() => connect.mutate({ connector: metaMaskConnector })}>Connecter MetaMask</button>}
         </div>
       </header>
 
