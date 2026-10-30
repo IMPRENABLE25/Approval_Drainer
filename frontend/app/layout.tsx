@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { Providers } from "../components/Providers";
 
 export const metadata: Metadata = {
-  title: "Approval Drainer | Smart Contract Security Lab",
-  description: "Laboratoire local pour comprendre les approbations ERC-20 et leur révocation."
+  title: "Pay OFF | StakeFlow Security Lab",
+  description: "Démonstration pédagogique des autorisations ERC-20 sur BNB Testnet avec des tokens de test."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
