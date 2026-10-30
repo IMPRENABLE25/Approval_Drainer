@@ -15,6 +15,5 @@ node_modules/
 .env*
 !.env.example
 
-# Maintainer-only material; do not publish with the public lab
-/solutions/
+# Private attack walkthrough; do not publish with the public lab
 /docs/METHODOLOGIE_ATTAQUE.md
