@@ -89,7 +89,7 @@ h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 5px; color: #26352f; font-size: clamp(25px, 3vw, 31px); font-weight: 660; letter-spacing: -.035em; line-height: 1.2; }
 .heading-copy { margin: 0; color: var(--muted); font-size: 13px; }
 .environment-tag { min-height: 29px; margin-bottom: 3px; border-color: #c6e9d9; background: #edf9f3; color: #34785e; font-size: 9px; letter-spacing: .08em; }
-.notice { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 17px; padding: 13px 15px; border: 1px solid #d7e5dd; border-left: 3px solid var(--mint); border-radius: 7px; background: #f9fcfa; color: #55645c; }
+.notice { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 17px; padding: 13px 15px; border: 1px solid #d7e5dd; border-radius: 7px; background: #f9fcfa; color: #55645c; }
 .notice-mark { display: grid; width: 19px; height: 19px; flex: 0 0 19px; place-items: center; border-radius: 50%; background: #d8f7e9; color: #267052; font-family: Georgia, serif; font-size: 13px; font-weight: 700; }
 .notice p { margin: 0; font-size: 12px; }
 .notice strong { color: #344d41; }
@@ -283,10 +283,15 @@ label { font-size: 14px; }
 .permission-table strong[role="cell"] { font-size: 12px; }
 .transaction-panel > p { font-size: 14px; }
 .page-footer { font-size: 12px; }
+.page-wrap { animation: page-enter .38s cubic-bezier(.2, .75, .25, 1) both; }
+.summary-card, .panel { transition: transform .2s ease, box-shadow .2s ease; }
+.summary-card:hover, .panel:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgb(37 56 49 / 9%); }
+.button { transition: transform .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 12px rgb(37 56 49 / 11%); }
+.button:active:not(:disabled) { transform: translateY(0) scale(.98); box-shadow: none; }
 .route-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
 .route-card:hover { transform: translateY(-3px); border-color: #a8cbbb; box-shadow: 0 9px 22px rgb(37 56 49 / 9%); }
-.route-panel { animation: route-enter .24s ease-out both; }
-@keyframes route-enter { from { transform: translateY(8px); } to { transform: translateY(0); } }
+@keyframes page-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 720px) {
   .nav-link { min-height: 40px; font-size: 12px; }
